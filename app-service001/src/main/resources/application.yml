@@ -1,0 +1,12 @@
+#会员服务
+server:
+  port: 9000
+spring:
+  application:
+    name: app-service001    #服务名
+
+#Eureka配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:1111/eureka/     #注册中心的地址

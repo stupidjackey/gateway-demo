@@ -1,0 +1,65 @@
+server:
+  port: 80
+spring:
+  application:
+    name: gateway
+  redis:
+    host: 10.140.75.152
+    password: 8Vvma7&wEi
+    port: 16379
+    database: 6
+    jedis:
+      pool:
+        max-active: 8
+        min-idle: 0
+        max-idle: 8
+        max-wait: -1
+  cloud:
+    gateway:
+      enabled: true
+      routes:
+        - id: app-service001
+          uri: http://localhost:9000
+          predicates:
+            - After=2024-07-31T10:14:00.000+08:00[Asia/Shanghai]
+#            - Before=2017-01-20T17:42:47.789-07:00[America/Denver]
+#            - Between=2017-01-20T17:42:47.789-07:00[America/Denver], 2017-01-21T17:42:47.789-07:00[America/Denver]
+            - Path=/app1/**
+          filters:
+            - RequestLog=config
+            - AddRequestHeader=X-Request-Foo, Bar1111111111111
+            - AddRequestHeader=X-Request-red, blue
+            - AddRequestParameter=red, blue
+
+      discovery:
+        locator:
+          #开启服务发现动态路由
+          enabled: true
+          #是否将服务名称小写
+          lower-case-service-id: true
+      filter:
+        request-rate-limiter:
+          #是否拒绝限流时，Key为空的请求
+          deny-empty-key: true
+          #Key为空响应状态码
+          empty-key-status-code: 400
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: '#{@uriKeyResolver}'    #使用SpEL表达式按名称 引用Key生成器 bean
+            redis-rate-limiter.replenishRate: 1  #令牌桶每秒填充速率
+            redis-rate-limiter.burstCapacity: 2  #令牌桶总容量
+            redis-rate-limiter.requestedTokens: 1 #每次消耗令牌个数
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  metrics:
+    tags:
+      application: ${spring.application.name}
